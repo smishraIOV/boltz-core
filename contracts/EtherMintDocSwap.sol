@@ -5,7 +5,7 @@ pragma solidity 0.8.10;
 import "./TransferHelper.sol";
 
 // @title Hash timelock contract for Ether
-contract EtherSwap {
+contract EtherMintDoCSwap {
     // State variables
 
     /// @dev Version of the contract used for compatibility checks
@@ -26,6 +26,13 @@ contract EtherSwap {
 
     event Claim(bytes32 indexed preimageHash, bytes32 preimage);
     event Refund(bytes32 indexed preimageHash);
+
+    //Mintable dummy DOC contract (not MoC, which would need 2 contracts, DOC and MOC) 
+    address payable docAddr;
+
+    constructor(address payable _docAddr) {
+        docAddr = _docAddr;
+    }
 
     // Functions
 
