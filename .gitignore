@@ -75,3 +75,6 @@ typechain/
 
 # MythX output folder
 bin/
+
+# Mac
+.DS_Store
