@@ -94,15 +94,17 @@ contract EtherMintDoCSwap {
     /// @param amount Amount locked in the contract for the swap in WEI
     /// @param refundAddress Address that locked the RBTC in the contract
     /// @param timelock Block height after which the locked RBTC can be refunded
-    /// @param btcToMint the part of 'amount' that the claimant wants in DOC
-    ////@param docReceiverAddr the claimant can choose to send minted DOCs to this address (e.g. a Merchant)
+    /// @param btcToMint the part of 'amount' in WEI that the claimant wants converted to DOC
+    ////@param docReceiverAddr the claimant (msg.sender) can send minted DOCs to this address
+    /// @param leftoverRbtcAddr the claimant (msg.sender) can send leftover RBTC (after minting) to this address
     function claim(
         bytes32 preimage,
         uint amount,
-        address payable refundAddress,
+        address refundAddress,
         uint timelock,
         uint btcToMint,
-        address docReceiverAddress
+        address docReceiverAddress,
+        address payable leftoverRbtcAddr
     ) external {
          //must use some RBTC for minting fees, so value of DOCs minted must be less than RBTC locked
         require(btcToMint <= amount, "cannot mint more value than locked");
@@ -138,8 +140,8 @@ contract EtherMintDoCSwap {
         //  Check for any RBTC balance leftover (in the context of this swap)
         uint256 remainder = address(this).balance - oldBalance;
         if (remainder > 0) {
-            (bool success, ) = refundAddress.call{value: remainder}("");
-            require(success, "Failed to send remainder to refundAddress");
+            (bool success, ) = leftoverRbtcAddr.call{value: remainder}("");
+            require(success, "Failed to refund leftover RBTC post minting");
             emit ChangeRefund(remainder);
         }
 
@@ -244,7 +246,7 @@ contract EtherMintDoCSwap {
     }
 
     // Minting DOCs: This part is similar to https://github.com/smishraIOV/doc-minter/tree/boltzMoc which is a fork of Vovchyk's doc-minter
-    /// internal function to mint DOCs, and forward the tokens as well as any leftover funds, to designated recipients
+    /// internal function to mints DOC and transfers to designated recipient.
     /// @param docReceiverAddress address to forward minted DOCs (can be same as `claimAddress`)
     /// @param totalVal total RBTC (in Wei) to send to MOC contract (in the call's `msg.value`) for minting DOCs and pay MOC fees (`btcToMint` + fees). Can be same as `amount`.
     /// @param btcToMint the amount of RBTC (in Wei) to convert to DOCs. This should be less than `totalVal` (to pay minting fees)
