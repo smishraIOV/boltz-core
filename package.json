@@ -24,7 +24,8 @@
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BoltzExchange/boltz-core.git"
+    "url": "git+https://github.com/smishraiov/boltz-core.git",
+    "branch": "ri-poc"
   },
   "files": [
     "LICENSE",
