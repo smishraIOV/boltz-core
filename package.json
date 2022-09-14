@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "npm run compile:solidity && npm run compile:typescript",
     "compile:solidity": "hardhat compile && npm run compile:solidity:ethers",
-    "compile:solidity:ethers": "typechain --target ethers-v5 --out-dir typechain/ ./artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/EtherSwap.sol/EtherSwap.json && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/ERC20Swap.sol/ERC20Swap.json  && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/DummyDoCMintERC20.sol/DummyDoCMintERC20.json && rm ./typechain/index.ts",
+    "compile:solidity:ethers": "typechain --target ethers-v5 --out-dir typechain/ ./artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/EtherSwap.sol/EtherSwap.json && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/ERC20Swap.sol/ERC20Swap.json  && typechain --target ethers-v5 --out-dir typechain/ ./artifacts/contracts/DummyDocMintERC20.sol/DummyDocMintERC20.json && rm ./typechain/index.ts",
     "compile:typescript": "tsc",
     "compile:typescript:watch": "tsc --watch",
     "lint": "eslint --max-warnings 0 --ext .ts .",
