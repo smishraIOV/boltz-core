@@ -1,13 +1,16 @@
 import { BigNumber, Contract, utils } from 'ethers';
 import { HardhatRuntimeEnvironment } from  'hardhat/types/runtime';
 
+// change the order from before. Start with the 2 tokens and EtherSwap last (it needs token address)
 const contracts = [
-  'EtherSwap',
-  'ERC20Swap',
+  'DummyDocMintERC20',
   'TestERC20',
+  'ERC20Swap',
+  'EtherSwap'
 ];
 
 const tokenDecimals = BigNumber.from(10).pow(18);
+// this is only for original boltz-core erc20, not for DOC which is mintable on Demand
 const tokenSupply = tokenDecimals.mul(1000000);
 
 let gasSpent = BigNumber.from(0);
@@ -40,7 +43,8 @@ const waitForReceipt = async (hre: HardhatRuntimeEnvironment, transactionHash: s
   return receipt;
 };
 
-const deployContract = async (hre: HardhatRuntimeEnvironment, contractName: string, tokenSupply?: BigNumber) => {
+//3 contracts can be deployed without dependencies on each other
+const deployContract = async (hre: HardhatRuntimeEnvironment, contractName: string, mintableDoc: boolean, tokenSupply?: BigNumber) => {
   console.log(`Deploying ${contractName}`);
 
   if (tokenSupply) {
@@ -56,7 +60,15 @@ const deployContract = async (hre: HardhatRuntimeEnvironment, contractName: stri
   if (tokenSupply) {
     contract = await factory.deploy('TestERC20', 'TRC', 18, tokenSupply);
   } else {
-    contract = await factory.deploy();
+    if (mintableDoc) {
+      //owner is 2nd signer account, okay for regtest (do not deploy on mainnet or testnet use actual MoC DOC contract)
+      let docOwner = await (await hre.ethers.getSigners())[2].getAddress();
+      let BTCprice = BigNumber.from(20_000); //RBTC gwei to DOC gwei ratio (units, decimals don't matter)
+      let mintFee = BigNumber.from(10).pow(7).mul(21000).mul(6); // say fee is same as 21K gas at 0.06 gwei
+      contract = await factory.deploy(docOwner, mintFee, BTCprice);  
+    } else {
+      contract = await factory.deploy();      
+    }
   }
 
   console.log(`  Transaction: ${contract.deployTransaction.hash}`);
@@ -71,11 +83,32 @@ const deployContract = async (hre: HardhatRuntimeEnvironment, contractName: stri
   return contract.address;
 };
 
+// Deploy HTLC Swap contract with mintable option 
+// This will use address of Money on chain and DOC contracts (or dummy mintable DOC)
+const deployMintableHtlcContract = async (hre: HardhatRuntimeEnvironment, contractName: string, MoCAddr: string, DOCAddr: string) => {
+  console.log(`Deploying ${contractName}`);
+
+  console.log();
+
+  const factory = await hre.ethers.getContractFactory(contractName);
+
+  let contract: Contract;
+  
+  contract = await factory.deploy(MoCAddr, DOCAddr);  
+
+  console.log(`  Transaction: ${contract.deployTransaction.hash}`);
+
+  const deployReceipt = await waitForReceipt(hre, contract.deployTransaction.hash);
+
+  gasSpent = gasSpent.add(deployReceipt.gasUsed.mul(contract.deployTransaction.gasPrice));
+
+  console.log(`  Address: ${contract.address}`);
+  console.log();
+
+  return contract.address;
+};
+
 const deploy = async (hre: HardhatRuntimeEnvironment): Promise<string[]> => {
-  // Don't deploy the test token on mainnet
-  if (hre.network.name === 'mainnet') {
-    contracts.pop();
-  }
 
   console.log();
   console.log(`Using address: ${await (await hre.ethers.getSigners())[0].getAddress()} `);
@@ -85,15 +118,23 @@ const deploy = async (hre: HardhatRuntimeEnvironment): Promise<string[]> => {
   console.log();
 
   const addresses: string[] = [];
+  
+  // Don't deploy the test tokens on mainnet or testnet
+  if (hre.network.name === 'mainnet' || hre.network.name === 'testnet') {   
+    //verify addresses (RSK testnet used here)
+    const mocTestAddr = '0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F';
+    const DOCTestAddr = '0xCB46c0ddc60D18eFEB0E586C17Af6ea36452Dae0';
+    addresses.push(await deployContract(hre, contracts[2], false));
+    addresses.push(await deployMintableHtlcContract(hre, contracts[3], mocTestAddr, DOCTestAddr));
 
-  for (const contract of contracts) {
-    // The token needs an argument in the constructor
-    if (contracts.length === 3 && contract === contracts[2]) {
-      addresses.push(await deployContract(hre, contracts[2], tokenSupply));
-    } else {
-      addresses.push(await deployContract(hre, contract));
-    }
+  } else { //regtest mode: deploy all 4 contracts
+    addresses.push(await deployContract(hre, contracts[0], true));    
+    addresses.push(await deployContract(hre, contracts[1], false, tokenSupply));  
+    addresses.push(await deployContract(hre, contracts[2], false));
+    // resuse Dummy DOC address for both MoC and DOC address
+    addresses.push(await deployMintableHtlcContract(hre, contracts[3], addresses[0], addresses[0]));  
   }
+  
 
   console.log(`Gas cost: ${utils.formatUnits(gasSpent, 'ether')}`);
   console.log();

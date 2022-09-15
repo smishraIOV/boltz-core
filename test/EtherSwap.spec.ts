@@ -61,8 +61,12 @@ describe('EtherSwap', async () => {
 
     claimSigner = signers[1];
     claimAddress = await claimSigner.getAddress();
-
-    etherSwap = await (await ethers.getContractFactory('EtherSwap')).deploy() as any as EtherSwap;
+    
+    //RSK testnet address. These are not actually available locally. Okay to test claim based on Ether/RBTC only
+    const mocTestAddr = '0x2820f6d4D199B8D8838A4B26F9917754B86a0c1F';
+    const DOCTestAddr = '0xCB46c0ddc60D18eFEB0E586C17Af6ea36452Dae0';
+    //should deploy mintable Dummy DOC (as in deploy script) and use that
+    etherSwap = await (await ethers.getContractFactory('EtherSwap')).deploy(mocTestAddr, DOCTestAddr) as any as EtherSwap;
 
     expect(etherSwap.address).to.be.properAddress;
   });

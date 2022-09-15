@@ -140,8 +140,9 @@ contract EtherSwap {
         address docReceiverAddress,
         address payable leftoverRbtcAddr
     ) external {
-         //must use some RBTC for minting fees, so value of DOCs minted must be less than RBTC locked
-        require(btcToMint <= amount, "cannot mint more value than locked");
+        //must use some RBTC for minting fees, so value of DOCs minted must be less than RBTC locked
+        // this is a "fast fail" when the amounts are equal. Call can still fail if values are too close (not enough fees).
+        require(btcToMint < amount, "cannot mint more value than locked");
         
         // If the preimage is wrong, so will be its hash which will result in a wrong value hash and no swap being found
         bytes32 preimageHash = sha256(abi.encodePacked(preimage));
