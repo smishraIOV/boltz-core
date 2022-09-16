@@ -13,12 +13,14 @@ import { estimateFee, estimateSize } from './FeeCalculator';
 import { ScriptElement, TransactionOutput } from './consts/Types';
 import EtherSwapABI from '../artifacts/contracts/EtherSwap.sol/EtherSwap.json';
 import ERC20SwapABI from '../artifacts/contracts/ERC20Swap.sol/ERC20Swap.json';
+import DummyDocMintERC20ABI from '../artifacts/contracts/DummyDocMintERC20.sol/DummyDocMintERC20.json';
 import ERC20ABI from '../artifacts/@openzeppelin/contracts/token/ERC20/ERC20.sol/ERC20.json';
 
 const ContractABIs = {
   ERC20: ERC20ABI.abi,
   EtherSwap: EtherSwapABI.abi,
   ERC20Swap: ERC20SwapABI.abi,
+  DummyDocMintERC20: DummyDocMintERC20ABI.abi
 };
 
 export {

@@ -100,7 +100,7 @@ const deployMintableHtlcContract = async (hre: HardhatRuntimeEnvironment, contra
 
   const deployReceipt = await waitForReceipt(hre, contract.deployTransaction.hash);
 
-  gasSpent = gasSpent.add(deployReceipt.gasUsed.mul(contract.deployTransaction.gasPrice));
+  gasSpent = gasSpent.add(deployReceipt.gasUsed);//.mul(contract.deployTransaction.gasPrice));
 
   console.log(`  Address: ${contract.address}`);
   console.log();
@@ -127,7 +127,7 @@ const deploy = async (hre: HardhatRuntimeEnvironment): Promise<string[]> => {
     addresses.push(await deployContract(hre, contracts[2], false));
     addresses.push(await deployMintableHtlcContract(hre, contracts[3], mocTestAddr, DOCTestAddr));
 
-  } else { //regtest mode: deploy all 4 contracts
+  } else { //regtest mode: deploy all 4 contracts. the order is different (from original boltz )
     addresses.push(await deployContract(hre, contracts[0], true));    
     addresses.push(await deployContract(hre, contracts[1], false, tokenSupply));  
     addresses.push(await deployContract(hre, contracts[2], false));
