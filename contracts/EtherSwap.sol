@@ -46,6 +46,11 @@ contract EtherSwap {
     // Functions
 
     // External functions
+    // A receive function. Original Boltz does not accept ether. And this will fail a test for that.abi
+    // But we need one because MoC will return leftover RBTC after minting DOC + fees
+    // There is still no fallback function. Any RBTC sent with (some) data not matching a func signature must be reverted
+    receive() external payable {}
+
 
     /// Locks Ether for a swap in the contract
     /// @notice The amount locked is the Ether sent in the transaction and the refund address is the sender of the transaction
