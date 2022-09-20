@@ -163,7 +163,9 @@ contract EtherSwap {
         // This *HAS* to be done before actually sending the Ether to avoid reentrancy
         delete swaps[hash];
 
-        // Emit the claim event
+        // Emit the claim event todo(shree) remove one of these later (both here for initial testing)
+        emit Claim(preimageHash, preimage);
+        // Emit new version
         emit ClaimDocViaMint(preimageHash, preimage);
         
         //check contract RBTC balance (should be same as `amount`)
