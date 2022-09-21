@@ -2,6 +2,8 @@
 
 pragma solidity 0.8.10;
 
+import "hardhat/console.sol";
+
 import "./TransferHelper.sol";
 
 // @title Hash timelock contract for Ether
@@ -175,20 +177,23 @@ contract EtherSwap {
         
         //check contract RBTC balance (should be same as `amount`)
         uint256 oldBalance = address(this).balance;
-        
         // Try to mint DOCs.
+        //  Check for any RBTC balance leftover (in the context of this swap)
+        console.log("Pre minting RBTC Balance in swap HTLC: %o", oldBalance);
+        console.log("RBTC sent in mint call: %o", amount);
         mintAndTransferDoc(docReceiverAddress, amount, btcToMint);
         
-        //  Check for any RBTC balance leftover (in the context of this swap)
-        uint256 remainder = address(this).balance - oldBalance;
-        if (remainder > 0) {
+        uint256 newBalance = address(this).balance;
+        console.log("Post minting RBTC Balance in swap HTLC: %o", newBalance);
+        
+        if (newBalance + amount > oldBalance) {
+            uint256 remainder = newBalance + amount - oldBalance;
+            console.log("RBTC refunded by mint call: %o", remainder);
             (bool success, ) = leftoverRbtcAddr.call{value: remainder}("");
             require(success, "Failed to refund leftover RBTC post minting");
             emit ChangeRefund(remainder);
         }
 
-        // If minting fails, transfer any leftover RBTC to the claim address
-        //TransferHelper.transferEther(payable(msg.sender), amount);
     }
 
 

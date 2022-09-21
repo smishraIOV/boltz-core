@@ -131,7 +131,7 @@ const deploy = async (hre: HardhatRuntimeEnvironment): Promise<string[]> => {
     addresses.push(await deployContract(hre, contracts[0], true));    
     addresses.push(await deployContract(hre, contracts[1], false, tokenSupply));  
     addresses.push(await deployContract(hre, contracts[2], false));
-    // resuse Dummy DOC address for both MoC and DOC address
+    // use dummy doc address for both MOC (for mint call) and DOC addr (to check balances)
     addresses.push(await deployMintableHtlcContract(hre, contracts[3], addresses[0], addresses[0]));  
   }
   

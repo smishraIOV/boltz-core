@@ -48,8 +48,8 @@ contract DummyDocMintERC20 is ERC20 {
         bool success;
         (success, ) =  msg.sender.call{value: remainder}("");
         require(success, "Failed to send refund");
-        console.log("Amount refunded %o", remainder);
-        console.log("RBTC balance in contract is %o", address(this).balance); 
+        console.log("Amount refunded to Swap contract %o", remainder);
+        console.log("RBTC balance in Dummy DOC contract is %o", address(this).balance); 
     }
 
     // Change params
