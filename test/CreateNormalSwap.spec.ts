@@ -109,20 +109,3 @@ describe('EtherSwap', async () => {
 
 });
 
-//Request
-// {
-//   "type": "submarine",
-//   "pairId": "RBTC/BTC",
-//   "orderSide": "sell",
-//   "invoice": "lntb590u1pj5gf2ppp53zsr9ackynyxudkcy9qrr2g9wutcmc5dzd3xmjcgk7x6yvzal8nqcqpjsp5c4zukhdzvcrvr9p80magm7mq2630srmd2amd599jl7sh7usljrxs9q7sqqqqqqqqqqqqqqqqqqqsqqqqqysgqdqqmqz9gxqyjw5qrzjqwfn3p9278ttzzpe0e00uhyxhned3j5d9acqak5emwfpflp8z2cnfl62ut2j7vkh3vqqqqlgqqqqqeqqjqauphpaw6ag68aakyh5amyfpal8e5xtuz3dn9gthrpy2mmcszfaxz3t4sx47ayf9jwen3ygn428fpvrdp5ux8a52mlgpryvq8rrgruygp068rqu"
-// }
-
-//Response
-// {
-//   "id": "uUHevV",
-//   "address": "0x165F8E654b3Fe310A854805323718D51977ad95F",
-//   "claimAddress": "0x4217BD283e9Dc9A2cE3d5D20fAE34AA0902C28db",
-//   "acceptZeroConf": false,
-//   "expectedAmount": 59458,
-//   "timeoutBlockHeight": 4454889
-// }

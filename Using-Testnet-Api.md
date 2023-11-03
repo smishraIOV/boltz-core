@@ -25,22 +25,25 @@ Note: This branch `shree-testnet` is a based on a previous version of the repo. 
 ## Prelims
 
 * The usual `npm install` first. 
-* To pay for gas a create a file `.testnet.seed-phrase` with a "12-word" *mnemonic* (makes sure the first 2 accounts have some tRBTC).
+* To pay gas for transactions create a file `.testnet.seed-phrase` with a "12-word" *mnemonic* (makes sure the first 2-3 accounts have some tRBTC).
 
 
 ## Tools used (other options available) 
 
 * Postman for API calls
-* Phoenix mobile lightning wallet (tesnet APK available for android only)
-    * tried Electrum wallet too on testnet, but had trouble paying and receiving invoices with Boltz. 
+* Phoenix mobile lightning wallet (testnet APK available for android only)
+    * tried Electrum wallet too on testnet, but had trouble paying and receiving invoices with Boltz.
+    * You can try Alby or www.htlc.me
 * https://lightningdecoder.com/
     * Paste a lightning invoice here to isolate the `preimagehash` (which is called the `payment hash` here). 
-    * When creating a normal submarine swap, we need the `preimagehash`` to lock RBTC to the contract.
+    * When creating a normal submarine swap, we need the `preimagehash` of the invoice before we can lock RBTC to the contract.
 
 
 ## How to Swap LN-BTC for RBTC ('reverse' submarine swap)
+The idea here is for us to pay Boltz LN-BTC using an invoice they will provide and we can claim RBTC later.
 
-Create a preimage and then hash it. Save the preimage for claiming later. One way to do this is to use
+
+First task is to create a preimage and then hash (sha256) it. Save the preimage for claiming later. One way to do this is to use
 
 ```
 npx hardhat test test/genPreimageHash.spec.ts
@@ -60,9 +63,9 @@ POST: https://testnet.boltz.exchange/api/createswap
     "type": "reversesubmarine",
     "pairId": "RBTC/BTC",
     "orderSide": "buy",
-    "claimAddress": "0xA24c59516...b0B71ff3a", #RSK address we will claim RBTC with
-    "invoiceAmount": 55000,   # amount in sats
-    "preimageHash": "f97663f3...8504293087c"
+    "claimAddress": "0xA24c59516...b0B71ff3a", #Your RSK address to claim RBTC
+    "invoiceAmount": 55000,   # amount we are swapping (in sats) 
+    "preimageHash": "f97663f3...8504293087c"  #the preimage hash we generated
 }
 ```
 
@@ -74,7 +77,7 @@ Boltz API will respond with something like
   "invoice": "lntb500u1pj5240ppp57zprnnlfaryx9ynuw0ngng2kt2k...tclvn4hg55r7xztse3jvjh6deqp6g9gwt",
   "refundAddress": "0x4217Bd283E9dc9a2cE3d5D20fae34AA0902C28db", # Boltz's RSK address
   "lockupAddress": "0x165f8E654B3fe310A854805323718d51977aD95f", # contract address
-  "onchainAmount": 51024, #sats
+  "onchainAmount": 51024, #what we will claim in RBTC (still iu sats, not weis)
   "timeoutBlockHeight": 4453497 #RSK block height
 }
 ```
