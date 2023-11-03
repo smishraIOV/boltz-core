@@ -3,18 +3,23 @@ import 'hardhat-gas-reporter';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
-import { contracts, deploy } from './scripts/deploy';
+//import { contracts, deploy } from './scripts/deploy';
 import { HardhatUserConfig, task } from 'hardhat/config';
 
-const paths = {
-  infuraKey: '.infura.key',
-  etherscanKey: '.etherscan.key',
-  mnemonics: '.mnemonics.json',
-};
+// const paths = {
+//   infuraKey: '.infura.key',
+//   etherscanKey: '.etherscan.key',
+//   mnemonics: '.mnemonics.json',
+// };
 
-const mnemonics = fs.existsSync(paths.mnemonics) ? JSON.parse(fs.readFileSync(paths.mnemonics).toString()) : undefined;
-const infuraKey = fs.existsSync(paths.infuraKey) ? fs.readFileSync(paths.infuraKey).toString().trim() : undefined;
-const etherscanKey = fs.existsSync(paths.etherscanKey) ? fs.readFileSync(paths.etherscanKey).toString().trim() : undefined;
+// const mnemonics = fs.existsSync(paths.mnemonics) ? JSON.parse(fs.readFileSync(paths.mnemonics).toString()) : undefined;
+// const infuraKey = fs.existsSync(paths.infuraKey) ? fs.readFileSync(paths.infuraKey).toString().trim() : undefined;
+// const etherscanKey = fs.existsSync(paths.etherscanKey) ? fs.readFileSync(paths.etherscanKey).toString().trim() : undefined;
+
+const mnemonic = fs.readFileSync('.testnet.seed-phrase').toString().trim();
+if (!mnemonic || mnemonic.split(' ').length !== 12) {
+  console.log('unable to retrieve mnemonic from .secret');
+}
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -39,30 +44,39 @@ const config: HardhatUserConfig = {
   },
 };
 
-if (mnemonics && infuraKey) {
+if (mnemonic) {
   config.networks = {
-    rinkeby: {
+    // rinkeby: {
+    //   accounts: {
+    //     count: 1,
+    //     mnemonic: mnemonics.testnet,
+    //   },
+    //   url: `https://rinkeby.infura.io/v3/${infuraKey}`,
+    // },
+    // mainnet: {
+    //   accounts: {
+    //     count: 1,
+    //     mnemonic: mnemonics.mainnet,
+    //   },
+    //   url: `https://mainnet.infura.io/v3/${infuraKey}`,
+    // },
+     "rsk-testnet": {
       accounts: {
-        count: 1,
-        mnemonic: mnemonics.testnet,
+        count: 10,
+        mnemonic: mnemonic,
+        path: "m/44'/60'/0'/0",
       },
-      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
-    },
-    mainnet: {
-      accounts: {
-        count: 1,
-        mnemonic: mnemonics.mainnet,
-      },
-      url: `https://mainnet.infura.io/v3/${infuraKey}`,
+      url: 'https://public-node.testnet.rsk.co/',
+      chainId: 31,
     },
   };
 }
 
-if (etherscanKey) {
-  config.etherscan = {
-    apiKey: etherscanKey,
-  };
-}
+// if (etherscanKey) {
+//   config.etherscan = {
+//     apiKey: etherscanKey,
+//   };
+// }
 
 task('accounts', 'Prints all accounts', async (_, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -72,51 +86,51 @@ task('accounts', 'Prints all accounts', async (_, hre) => {
   }
 });
 
-task('deploy', 'Deploy the contracts', async (_, hre) => {
-  await deploy(hre);
-});
+// task('deploy', 'Deploy the contracts', async (_, hre) => {
+//   await deploy(hre);
+// });
 
-task('deploy-verify', 'Deploy the contracts and verify them on Etherscan', async (_, hre) => {
-  const addresses = await deploy(hre);
+// task('deploy-verify', 'Deploy the contracts and verify them on Etherscan', async (_, hre) => {
+//   const addresses = await deploy(hre);
 
-  // Don't verify the ERC20 contract
-  if (contracts.length === 3) {
-    contracts.pop();
-  }
+//   // Don't verify the ERC20 contract
+//   if (contracts.length === 3) {
+//     contracts.pop();
+//   }
 
-  console.log(`Verifying contracts on Etherscan contracts: ${Object.values(contracts).join(', ')}`);
-  console.log();
+//   console.log(`Verifying contracts on Etherscan contracts: ${Object.values(contracts).join(', ')}`);
+//   console.log();
 
-  for (let i = 0; i < contracts.length; i += 1) {
-    await hre.run('verify', { contractName: contracts[i], address: addresses[i] });
-  }
-});
+//   for (let i = 0; i < contracts.length; i += 1) {
+//     await hre.run('verify', { contractName: contracts[i], address: addresses[i] });
+//   }
+// });
 
-task('metamask-register', 'Generate method names and their hashes for the MetaMask registration', async (_, hre) => {
-  console.log();
-  console.log();
+// task('metamask-register', 'Generate method names and their hashes for the MetaMask registration', async (_, hre) => {
+//   console.log();
+//   console.log();
 
-  for (const contract of contracts) {
-    if (contract === 'TestERC20') {
-      continue;
-    }
+//   for (const contract of contracts) {
+//     if (contract === 'TestERC20') {
+//       continue;
+//     }
 
-    const factory = await hre.ethers.getContractFactory(contract);
+//     const factory = await hre.ethers.getContractFactory(contract);
 
-    console.log(`Contract ${contract}`);
-    console.log();
+//     console.log(`Contract ${contract}`);
+//     console.log();
 
-    for (const methodName of Object.keys(factory.interface.functions)) {
-      // Do not print view functions for which no MetaMask popup approval is needed
-      if (factory.interface.functions[methodName].stateMutability !== 'view') {
-        console.log(`  Method name: ${methodName}`);
-        console.log(`  Trimmed hash: ${hre.ethers.utils.solidityKeccak256(['string'], [methodName]).substring(0, 10)}`);
-        console.log();
-      }
-    }
+//     for (const methodName of Object.keys(factory.interface.functions)) {
+//       // Do not print view functions for which no MetaMask popup approval is needed
+//       if (factory.interface.functions[methodName].stateMutability !== 'view') {
+//         console.log(`  Method name: ${methodName}`);
+//         console.log(`  Trimmed hash: ${hre.ethers.utils.solidityKeccak256(['string'], [methodName]).substring(0, 10)}`);
+//         console.log();
+//       }
+//     }
 
-    console.log();
-  }
-});
+//     console.log();
+//   }
+// });
 
 export default config;

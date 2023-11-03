@@ -78,3 +78,6 @@ bin/
 
 # Mac
 .DS_Store
+
+# Secrets
+.testnet.seed-phrase

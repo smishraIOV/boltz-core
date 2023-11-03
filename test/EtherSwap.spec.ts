@@ -6,7 +6,6 @@ import { crypto } from 'bitcoinjs-lib';
 import { solidity } from 'ethereum-waffle';
 import { Signer, providers, constants, utils, BigNumber } from 'ethers';
 import { EtherSwap } from '../typechain/EtherSwap';
-import { DummyDocMintERC20 } from '../typechain/DummyDocMintERC20';
 import { checkContractEvent, checkLockupEvent, expectInvalidDataLength, expectRevert } from './Utils';
 
 chai.use(solidity);
@@ -23,11 +22,10 @@ describe('EtherSwap', async () => {
 
   const preimage = randomBytes(32);
   const preimageHash = crypto.sha256(preimage);
-  const lockupAmount = constants.WeiPerEther;
+  const lockupAmount = constants.WeiPerEther.div(1000);
 
   let timelock: number;
 
-  let dummyDOC: DummyDocMintERC20;
   let etherSwap: EtherSwap;
 
   let lockupTransactionHash: string;
@@ -63,34 +61,30 @@ describe('EtherSwap', async () => {
 
     claimSigner = signers[1];
     claimAddress = await claimSigner.getAddress();
-    
-    //RSK testnet address. These are not actually available locally. Okay to test claim based on Ether/RBTC only
 
-    //should deploy mintable Dummy DOC (as in deploy script) and use that
-    let docOwner = await (await ethers.getSigners())[2].getAddress();
-    let BTCprice = BigNumber.from(20000); //RBTC gwei to DOC gwei ratio (units, decimals don't matter)
-    let mintFee = BigNumber.from(10).pow(7).mul(21000).mul(6); // say fee is same as 21K gas at 0.06 gwei (RBTC)
-    
-    dummyDOC = await (await ethers.getContractFactory('DummyDocMintERC20')).deploy(docOwner, mintFee, BTCprice) as any as DummyDocMintERC20;
-    expect(dummyDOC.address).to.be.properAddress;
-    // use dummy doc address for both MOC (for mint call) and DOC addr (to check balances)
-    etherSwap = await (await ethers.getContractFactory('EtherSwap')).deploy(dummyDOC.address, dummyDOC.address) as any as EtherSwap;
+    // For hardhat network or self deployment on testnet
+    const etherSwapDep = await (await ethers.getContractFactory('EtherSwap')).deploy() as any as EtherSwap;
 
-    expect(etherSwap.address).to.be.properAddress;
+    console.log("Etherswap deployed at address: " + etherSwapDep.address);
+    expect(etherSwapDep.address).to.be.properAddress;
+    //read the just deployed contract as if it was externally given
+    etherSwap =  (await ethers.getContractFactory('EtherSwap')).attach(etherSwapDep.address) as any as EtherSwap;
+
+    //For RSK testnet contract deployed by boltz
+    //etherSwap =  (await ethers.getContractFactory('EtherSwap')).attach("0x165F8E654b3Fe310A854805323718D51977ad95F") as any as EtherSwap;
+
   });
 
   it('should have the correct version', async () => {
     expect(await etherSwap.version()).to.be.equal(2);
   });
 
-  /* changed. This is fine since minting may refund RBTC
   it('should not accept Ether without function signature', async () => {
     await expectRevert(senderSigner.sendTransaction({
       to: etherSwap.address,
       value: constants.WeiPerEther,
     }));
   });
-  */
 
   it('should hash swap values', async () => {
     timelock = await provider.getBlockNumber();
@@ -205,43 +199,6 @@ describe('EtherSwap', async () => {
 
     // Check the event emitted by the transaction
     checkContractEvent(receipt.events![0], 'Claim', preimageHash, preimage);
-
-    // Verify the swap was removed to the mapping
-    expect(await querySwap()).to.equal(false);
-  });
-
-  it('should claim via minting DOC', async () => {
-    //first repeat the lockup process
-    timelock = await provider.getBlockNumber();
-
-    const lockupTransaction = await lockup();
-    await lockupTransaction.wait(1);
-
-    let oldDOCbalance = await dummyDOC.balanceOf(claimAddress);
-    
-    let btcToMint = lockupAmount.div(BigNumber.from(4));
-    const claimTransaction = await etherSwap.connect(claimSigner).claimDoCViaMint(
-      preimage,
-      lockupAmount,
-      senderAddress,
-      timelock,
-      btcToMint,
-      claimAddress,
-      claimAddress,
-    );
-    const receipt = await claimTransaction.wait(1);
-
-    let newDOCbalance = await dummyDOC.balanceOf(claimAddress);
-    
-    const btcPrice = await dummyDOC.btcPrice();
-    console.log("DOCs minted: %s", newDOCbalance.sub(oldDOCbalance));
-    // verify minted DOC matches expected value
-    expect(newDOCbalance.sub(oldDOCbalance)).to.equal(btcToMint.mul(btcPrice));
-    
-    
-    // Check the event emitted by the transaction
-    checkContractEvent(receipt.events![0], 'Claim', preimageHash, preimage);
-    checkContractEvent(receipt.events![1], 'ClaimDocViaMint', preimageHash, preimage);
 
     // Verify the swap was removed to the mapping
     expect(await querySwap()).to.equal(false);

@@ -14,13 +14,15 @@
     "docker:stop": "docker stop boltz-bitcoin && docker rm boltz-bitcoin",
     "test": "npm run test:solidity && npm run test:unit && npm run test:int",
     "test:solidity": "hardhat test",
+    "test:rsk-accounts": "hardhat accounts --network rsk-testnet",
+    "test:rbtcswap": "hardhat test ./test/rbtcSwapTestnet.spec.ts --network rsk-testnet",
     "test:unit": "jest test-lib/unit",
     "test:int": "jest test-lib/integration --runInBand",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "preversion": "npm run lint && npm run compile && npm run test",
     "version": "npm run changelog",
     "prepare": "npm run compile",
-    "test:hh:deploy": "hardhat deploy --network hardhat" 
+    "test:hh:deploy": "hardhat deploy --network hardhat"
   },
   "license": "AGPL-3.0",
   "repository": {
@@ -43,6 +45,7 @@
   ],
   "dependencies": {
     "@boltz/bitcoin-ops": "^2.0.0",
+    "@ethereumjs/util": "^9.0.1",
     "bip32": "^3.0.1",
     "bip65": "^1.0.3",
     "bip66": "^1.1.5",
